@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/ASUS/.m2/repository/org/springframework/boot/**)"
+    ]
+  }
+}
