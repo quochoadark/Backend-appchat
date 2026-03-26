@@ -45,13 +45,16 @@ public class MessageService {
     }
 
     public boolean deleteMessage(String id) {
-        return messageRepository.findById(id).map(existing -> {
+        Optional<Message> optMessage = messageRepository.findById(id);
+        if (optMessage.isPresent()) {
+            Message existing = optMessage.get();
             existing.setDeleted(true);
             existing.setDeletedAt(Instant.now());
             existing.setContent(null);
             messageRepository.save(existing);
             return true;
-        }).orElse(false);
+        }
+        return false;
     }
 
     // Đánh dấu đã đọc — thêm userId vào read_by của từng tin nhắn
@@ -60,11 +63,11 @@ public class MessageService {
                 .findByConversationIdAndIsDeletedFalseOrderByCreatedAtDesc(
                         conversationId, PageRequest.of(0, 200));
         Instant now = Instant.now();
-        unread.forEach(msg -> {
+        for (Message msg : unread) {
             if (!msg.getReadBy().containsKey(userId)) {
                 msg.getReadBy().put(userId, now);
             }
-        });
+        }
         messageRepository.saveAll(unread);
     }
 

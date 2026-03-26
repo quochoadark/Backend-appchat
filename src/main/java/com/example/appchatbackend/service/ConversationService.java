@@ -27,16 +27,17 @@ public class ConversationService {
 
     // Tạo hoặc trả về hội thoại DIRECT đã tồn tại giữa 2 người
     public Conversation getOrCreateDirectConversation(String userId1, String userId2) {
-        return conversationRepository
-                .findDirectConversation(ConversationType.DIRECT, userId1, userId2)
-                .orElseGet(() -> {
-                    Conversation conversation = Conversation.builder()
-                            .type(ConversationType.DIRECT)
-                            .participants(List.of(userId1, userId2))
-                            .isActive(true)
-                            .build();
-                    return conversationRepository.save(conversation);
-                });
+        Optional<Conversation> existing = conversationRepository
+                .findDirectConversation(ConversationType.DIRECT, userId1, userId2);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        Conversation conversation = Conversation.builder()
+                .type(ConversationType.DIRECT)
+                .participants(List.of(userId1, userId2))
+                .isActive(true)
+                .build();
+        return conversationRepository.save(conversation);
     }
 
     public Conversation createGroupConversation(Conversation conversation) {
@@ -45,20 +46,26 @@ public class ConversationService {
     }
 
     public Optional<Conversation> updateConversation(String id, Conversation updatedConversation) {
-        return conversationRepository.findById(id).map(existing -> {
+        Optional<Conversation> optConversation = conversationRepository.findById(id);
+        if (optConversation.isPresent()) {
+            Conversation existing = optConversation.get();
             existing.setName(updatedConversation.getName());
             existing.setAvatarUrl(updatedConversation.getAvatarUrl());
             existing.setDescription(updatedConversation.getDescription());
-            return conversationRepository.save(existing);
-        });
+            return Optional.of(conversationRepository.save(existing));
+        }
+        return Optional.empty();
     }
 
     public boolean deleteConversation(String id) {
-        return conversationRepository.findById(id).map(existing -> {
+        Optional<Conversation> optConversation = conversationRepository.findById(id);
+        if (optConversation.isPresent()) {
+            Conversation existing = optConversation.get();
             existing.setActive(false);
             conversationRepository.save(existing);
             return true;
-        }).orElse(false);
+        }
+        return false;
     }
 
     public boolean isParticipant(String conversationId, String userId) {

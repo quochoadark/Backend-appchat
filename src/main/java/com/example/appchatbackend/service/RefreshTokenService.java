@@ -32,8 +32,11 @@ public class RefreshTokenService {
     }
 
     public Optional<RefreshToken> findValidToken(String token) {
-        return refreshTokenRepository.findByTokenAndIsRevokedFalse(token)
-                .filter(t -> t.getExpiresAt().isAfter(Instant.now()));
+        Optional<RefreshToken> optToken = refreshTokenRepository.findByTokenAndIsRevokedFalse(token);
+        if (optToken.isPresent() && optToken.get().getExpiresAt().isAfter(Instant.now())) {
+            return optToken;
+        }
+        return Optional.empty();
     }
 
     public List<RefreshToken> getSessionsByUserId(String userId) {
@@ -42,11 +45,14 @@ public class RefreshTokenService {
 
     // Logout 1 thiết bị — thu hồi token cụ thể
     public boolean revokeToken(String token) {
-        return refreshTokenRepository.findByTokenAndIsRevokedFalse(token).map(t -> {
+        Optional<RefreshToken> optToken = refreshTokenRepository.findByTokenAndIsRevokedFalse(token);
+        if (optToken.isPresent()) {
+            RefreshToken t = optToken.get();
             t.setRevoked(true);
             refreshTokenRepository.save(t);
             return true;
-        }).orElse(false);
+        }
+        return false;
     }
 
     // Logout tất cả thiết bị — xóa toàn bộ token của user

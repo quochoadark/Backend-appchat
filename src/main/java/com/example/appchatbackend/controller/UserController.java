@@ -1,12 +1,16 @@
 package com.example.appchatbackend.controller;
 
+import com.example.appchatbackend.helper.ApiResponse;
 import com.example.appchatbackend.model.User;
 import com.example.appchatbackend.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -18,40 +22,50 @@ public class UserController {
         this.userService = userService;
     }
 
-    // GET /users - Lấy tất cả users
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+        List<User> users = userService.findAll();
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách người dùng thành công", users));
     }
 
-    // GET /users/{id} - Lấy user theo id
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable String id) {
-        return userService.getUserById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable String id) {
+        Optional<User> user = userService.findById(id);
+        if (user.isPresent()) {
+            return ResponseEntity.ok(ApiResponse.success("Lấy thông tin người dùng thành công", user.get()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.notFound("Không tìm thấy người dùng với id: " + id));
     }
 
-    // POST /users - Tạo user mới
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User created = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<ApiResponse<User>> createUser(@RequestBody User user) {
+        User created = userService.create(user);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+        return ResponseEntity.created(location)
+                .body(ApiResponse.created("Tạo người dùng thành công", created));
     }
 
-    // PUT /users/{id} - Cập nhật user
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User user) {
-        return userService.updateUser(id, user)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable String id, @RequestBody User user) {
+        Optional<User> updated = userService.update(id, user);
+        if (updated.isPresent()) {
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật người dùng thành công", updated.get()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.notFound("Không tìm thấy người dùng với id: " + id));
     }
 
-    // DELETE /users/{id} - Xóa user
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
-        boolean deleted = userService.deleteUser(id);
-        return deleted ? ResponseEntity.noContent().build()
-                       : ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable String id) {
+        if (!userService.existsById(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound("Không tìm thấy người dùng với id: " + id));
+        }
+        userService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
