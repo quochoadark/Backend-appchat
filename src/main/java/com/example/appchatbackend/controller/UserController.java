@@ -3,14 +3,13 @@ package com.example.appchatbackend.controller;
 import com.example.appchatbackend.helper.ApiResponse;
 import com.example.appchatbackend.model.User;
 import com.example.appchatbackend.service.UserService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -30,16 +29,12 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable String id) {
-        Optional<User> user = userService.findById(id);
-        if (user.isPresent()) {
-            return ResponseEntity.ok(ApiResponse.success("Lấy thông tin người dùng thành công", user.get()));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.notFound("Không tìm thấy người dùng với id: " + id));
+        User user = userService.findById(id);
+        return ResponseEntity.ok(ApiResponse.success("Lấy thông tin người dùng thành công", user));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<User>> createUser(@RequestBody User user) {
+    public ResponseEntity<ApiResponse<User>> createUser(@Valid @RequestBody User user) {
         User created = userService.create(user);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -50,21 +45,13 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable String id, @RequestBody User user) {
-        Optional<User> updated = userService.update(id, user);
-        if (updated.isPresent()) {
-            return ResponseEntity.ok(ApiResponse.success("Cập nhật người dùng thành công", updated.get()));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.notFound("Không tìm thấy người dùng với id: " + id));
+    public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable String id, @Valid @RequestBody User user) {
+        User updated = userService.update(id, user);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật người dùng thành công", updated));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable String id) {
-        if (!userService.existsById(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.notFound("Không tìm thấy người dùng với id: " + id));
-        }
         userService.deleteById(id);
         return ResponseEntity.noContent().build();
     }

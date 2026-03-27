@@ -1,5 +1,6 @@
 package com.example.appchatbackend.model;
 
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,23 +25,31 @@ public class User {
     @Id
     private String id;
 
-    @Indexed(unique = true) // không trùng lặp
+    @NotBlank(message = "Tên đăng nhập không được để trống")
+    @Size(min = 2, max = 100, message = "Tên đăng nhập phải từ 2 đến 100 ký tự")
+    @Indexed(unique = true)
     @Field("username")
     private String username;
 
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không đúng định dạng")
     @Indexed(unique = true)
     @Field("email")
     private String email;
 
+    @NotBlank(message = "Mật khẩu không được để trống")
+    @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")
     @Field("password_hash")
     private String passwordHash;
 
+    @Size(min = 2, max = 100, message = "Tên hiển thị phải từ 2 đến 100 ký tự")
     @Field("display_name")
     private String displayName;
 
     @Field("avatar_url")
     private String avatarUrl;
 
+    @Size(max = 255, message = "Bio không được quá 255 ký tự")
     @Field("bio")
     private String bio;
 
