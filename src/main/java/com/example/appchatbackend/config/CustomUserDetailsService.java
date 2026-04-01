@@ -1,7 +1,7 @@
 package com.example.appchatbackend.config;
 
-import com.example.appchatbackend.model.User;
-import com.example.appchatbackend.repository.UserRepository;
+import com.example.appchatbackend.feature.user.User;
+import com.example.appchatbackend.feature.user.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
