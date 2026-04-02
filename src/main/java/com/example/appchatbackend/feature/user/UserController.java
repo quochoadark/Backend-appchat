@@ -1,6 +1,10 @@
 package com.example.appchatbackend.feature.user;
 
 import com.example.appchatbackend.helper.ApiResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +27,16 @@ public class UserController {
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
         List<User> users = userService.findAll();
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách người dùng thành công", users));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<User>>> searchUsers(
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("username").ascending());
+        Page<User> result = userService.search(keyword, pageable);
+        return ResponseEntity.ok(ApiResponse.success("Tìm kiếm thành công", result));
     }
 
     @GetMapping("/{id}")

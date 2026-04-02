@@ -2,6 +2,8 @@ package com.example.appchatbackend.feature.user;
 
 import com.example.appchatbackend.exception.DuplicateResourceException;
 import com.example.appchatbackend.exception.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,17 @@ public class UserServiceImpl implements UserService {
     public User findById(String id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "id", id));
+    }
+
+    @Override
+    public Page<User> search(String keyword, Pageable pageable) {
+        return userRepository.searchByKeyword(keyword, pageable);
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "email", email));
     }
 
     @Override
