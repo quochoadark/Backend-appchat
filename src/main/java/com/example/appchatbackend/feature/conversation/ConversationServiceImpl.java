@@ -1,5 +1,7 @@
 package com.example.appchatbackend.feature.conversation;
 
+import com.example.appchatbackend.feature.message.Message;
+import com.example.appchatbackend.feature.message.MessageType;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -74,5 +76,28 @@ public class ConversationServiceImpl implements ConversationService {
     @Override
     public boolean isParticipant(String conversationId, String userId) {
         return conversationRepository.existsByIdAndParticipantsContaining(conversationId, userId);
+    }
+
+    @Override
+    public void updateLastMessage(String conversationId, Message message) {
+        conversationRepository.findById(conversationId).ifPresent(conv -> {
+            String preview;
+            if (message.getMessageType() == MessageType.IMAGE) {
+                preview = "[Ảnh]";
+            } else if (message.getMessageType() == MessageType.FILE) {
+                preview = message.getContent(); // tên file
+            } else {
+                preview = message.getContent();
+            }
+            conv.setLastMessage(Conversation.LastMessageSnapshot.builder()
+                    .messageId(message.getId())
+                    .senderId(message.getSenderId())
+                    .senderDisplayName(message.getSenderDisplayName())
+                    .contentPreview(preview)
+                    .messageType(message.getMessageType())
+                    .sentAt(message.getCreatedAt())
+                    .build());
+            conversationRepository.save(conv);
+        });
     }
 }

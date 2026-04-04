@@ -1,5 +1,7 @@
 package com.example.appchatbackend.feature.conversation;
 
+import com.example.appchatbackend.feature.message.Message;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -18,4 +20,6 @@ public interface ConversationService {
     boolean deleteConversation(String id);
 
     boolean isParticipant(String conversationId, String userId);
+
+    void updateLastMessage(String conversationId, Message message);
 }

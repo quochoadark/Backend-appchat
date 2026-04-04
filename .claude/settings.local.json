@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(jar tf:*)"
+      "Bash(jar tf:*)",
+      "Bash(redis-cli ping:*)"
     ]
   }
 }

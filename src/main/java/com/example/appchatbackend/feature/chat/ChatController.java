@@ -72,6 +72,7 @@ public class ChatController {
                 .build();
 
         Message saved = messageService.sendMessage(message);
+        conversationService.updateLastMessage(request.getConversationId(), saved);
         onlineStatusService.refreshOnline(senderId);
 
         // Publish lên Redis để tất cả instance broadcast

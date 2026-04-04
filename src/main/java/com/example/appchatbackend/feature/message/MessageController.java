@@ -82,6 +82,7 @@ public class MessageController {
                 .build();
 
         Message sent = messageService.sendMessage(message);
+        conversationService.updateLastMessage(conversationId, sent);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .replacePath("/messages/{id}")
                 .buildAndExpand(sent.getId())
