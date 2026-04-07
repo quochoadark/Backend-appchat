@@ -1,6 +1,8 @@
 package com.example.appchatbackend.feature.message;
 
 import com.example.appchatbackend.exception.ResourceNotFoundException;
+import com.example.appchatbackend.feature.chat.RedisMessagePublisher;
+import com.example.appchatbackend.feature.chat.dto.ChatNotification;
 import com.example.appchatbackend.feature.conversation.ConversationService;
 import com.example.appchatbackend.feature.message.dto.request.SendMessageRequest;
 import com.example.appchatbackend.feature.user.User;
@@ -24,14 +26,16 @@ public class MessageController {
     private final MessageService messageService;
     private final ConversationService conversationService;
     private final UserRepository userRepository;
+    private final RedisMessagePublisher redisPublisher;
 
-    public MessageController(MessageService messageService, ConversationService conversationService, UserRepository userRepository) {
+    public MessageController(MessageService messageService, ConversationService conversationService,
+                             UserRepository userRepository, RedisMessagePublisher redisPublisher) {
         this.messageService = messageService;
         this.conversationService = conversationService;
         this.userRepository = userRepository;
+        this.redisPublisher = redisPublisher;
     }
 
-    // Lấy tin nhắn trong hội thoại (hỗ trợ cursor-based pagination qua query param ?before=<iso-timestamp>)
     @GetMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<ApiResponse<List<Message>>> getMessages(
             @PathVariable String conversationId,
@@ -50,7 +54,6 @@ public class MessageController {
         return ResponseEntity.ok(ApiResponse.success("Lấy tin nhắn thành công", messages));
     }
 
-    // Lấy một tin nhắn theo ID
     @GetMapping("/messages/{id}")
     public ResponseEntity<ApiResponse<Message>> getMessageById(
             @PathVariable String id,
@@ -62,7 +65,6 @@ public class MessageController {
         return ResponseEntity.ok(ApiResponse.success("Lấy tin nhắn thành công", message));
     }
 
-    // Gửi tin nhắn vào hội thoại
     @PostMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<ApiResponse<Message>> sendMessage(
             @PathVariable String conversationId,
@@ -83,6 +85,14 @@ public class MessageController {
 
         Message sent = messageService.sendMessage(message);
         conversationService.updateLastMessage(conversationId, sent);
+
+        // Fix 1: Publish lên Redis để real-time delivery qua WebSocket
+        redisPublisher.publish(conversationId, ChatNotification.builder()
+                .type(ChatNotification.NotificationType.NEW_MESSAGE)
+                .conversationId(conversationId)
+                .data(sent)
+                .build());
+
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .replacePath("/messages/{id}")
                 .buildAndExpand(sent.getId())
@@ -91,7 +101,6 @@ public class MessageController {
                 .body(ApiResponse.created("Gửi tin nhắn thành công", sent));
     }
 
-    // Xóa tin nhắn (soft delete, chỉ người gửi mới được xóa)
     @DeleteMapping("/messages/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteMessage(
             @PathVariable String id,
@@ -107,7 +116,6 @@ public class MessageController {
         return ResponseEntity.noContent().build();
     }
 
-    // Đánh dấu đã đọc tất cả tin nhắn trong hội thoại
     @PostMapping("/conversations/{conversationId}/messages/read")
     public ResponseEntity<ApiResponse<Void>> markAsRead(
             @PathVariable String conversationId,
@@ -118,7 +126,6 @@ public class MessageController {
         return ResponseEntity.ok(ApiResponse.success("Đánh dấu đã đọc thành công", null));
     }
 
-    // Đếm tin nhắn chưa đọc trong hội thoại
     @GetMapping("/conversations/{conversationId}/messages/unread")
     public ResponseEntity<ApiResponse<Long>> countUnread(
             @PathVariable String conversationId,
@@ -129,14 +136,17 @@ public class MessageController {
         return ResponseEntity.ok(ApiResponse.success("Lấy số tin nhắn chưa đọc thành công", count));
     }
 
+    // Fix 5: Đọc userId từ JWT claim, không query DB
+    private String getCurrentUserId(Jwt jwt) {
+        String userId = jwt.getClaimAsString("userId");
+        if (userId != null && !userId.isBlank()) return userId;
+        return getCurrentUser(jwt).getId();
+    }
+
     private User getCurrentUser(Jwt jwt) {
         String email = jwt.getSubject();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "email", email));
-    }
-
-    private String getCurrentUserId(Jwt jwt) {
-        return getCurrentUser(jwt).getId();
     }
 
     private void checkParticipant(String conversationId, String userId) {

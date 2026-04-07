@@ -4,10 +4,13 @@ import com.example.appchatbackend.exception.DuplicateResourceException;
 import com.example.appchatbackend.exception.ResourceNotFoundException;
 import com.example.appchatbackend.feature.user.User;
 import com.example.appchatbackend.feature.user.UserRepository;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -15,10 +18,14 @@ public class FriendServiceImpl implements FriendService {
 
     private final FriendRequestRepository friendRequestRepository;
     private final UserRepository userRepository;
+    private final MongoTemplate mongoTemplate;
 
-    public FriendServiceImpl(FriendRequestRepository friendRequestRepository, UserRepository userRepository) {
+    public FriendServiceImpl(FriendRequestRepository friendRequestRepository,
+                             UserRepository userRepository,
+                             MongoTemplate mongoTemplate) {
         this.friendRequestRepository = friendRequestRepository;
         this.userRepository = userRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
     @Override
@@ -26,18 +33,15 @@ public class FriendServiceImpl implements FriendService {
         if (senderId.equals(receiverId)) {
             throw new IllegalArgumentException("Không thể gửi lời mời kết bạn cho chính mình");
         }
-        // Kiểm tra người nhận tồn tại
         userRepository.findById(receiverId)
                 .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "id", receiverId));
 
-        // Kiểm tra đã là bạn bè chưa
         User sender = userRepository.findById(senderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "id", senderId));
         if (sender.getFriendIds() != null && sender.getFriendIds().contains(receiverId)) {
             throw new DuplicateResourceException("Quan hệ bạn bè", "userId", receiverId);
         }
 
-        // Kiểm tra đã có lời mời PENDING chưa (cả 2 chiều)
         if (friendRequestRepository.existsBySenderIdAndReceiverIdAndStatus(senderId, receiverId, FriendRequestStatus.PENDING)
                 || friendRequestRepository.existsBySenderIdAndReceiverIdAndStatus(receiverId, senderId, FriendRequestStatus.PENDING)) {
             throw new DuplicateResourceException("Lời mời kết bạn", "giữa 2 người dùng", senderId + " & " + receiverId);
@@ -64,9 +68,14 @@ public class FriendServiceImpl implements FriendService {
         request.setStatus(FriendRequestStatus.ACCEPTED);
         friendRequestRepository.save(request);
 
-        // Thêm vào friendIds của cả 2 người
+        // Fix 7: Dùng $addToSet (atomic per-document), rollback nếu bước 2 fail
         addFriend(request.getSenderId(), request.getReceiverId());
-        addFriend(request.getReceiverId(), request.getSenderId());
+        try {
+            addFriend(request.getReceiverId(), request.getSenderId());
+        } catch (Exception e) {
+            removeFriend(request.getSenderId(), request.getReceiverId());
+            throw e;
+        }
 
         return request;
     }
@@ -127,24 +136,17 @@ public class FriendServiceImpl implements FriendService {
                 .orElseThrow(() -> new ResourceNotFoundException("Lời mời kết bạn", "id", requestId));
     }
 
+    // Fix 7: $addToSet — atomic per-document, không duplicate
     private void addFriend(String userId, String friendId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "id", userId));
-        if (user.getFriendIds() == null) {
-            user.setFriendIds(new ArrayList<>());
-        }
-        if (!user.getFriendIds().contains(friendId)) {
-            user.getFriendIds().add(friendId);
-            userRepository.save(user);
-        }
+        Query query = Query.query(Criteria.where("_id").is(userId));
+        Update update = new Update().addToSet("friend_ids", friendId);
+        mongoTemplate.updateFirst(query, update, User.class);
     }
 
+    // Fix 7: $pull — atomic per-document
     private void removeFriend(String userId, String friendId) {
-        userRepository.findById(userId).ifPresent(user -> {
-            if (user.getFriendIds() != null) {
-                user.getFriendIds().remove(friendId);
-                userRepository.save(user);
-            }
-        });
+        Query query = Query.query(Criteria.where("_id").is(userId));
+        Update update = new Update().pull("friend_ids", friendId);
+        mongoTemplate.updateFirst(query, update, User.class);
     }
 }

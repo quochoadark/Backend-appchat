@@ -9,6 +9,21 @@
       "name": "jwt.expiration",
       "type": "java.lang.Long",
       "description": "Thời gian hết hạn của JWT token (milliseconds)."
+    },
+    {
+      "name": "ngrok.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Bật/tắt tự động khởi động ngrok tunnel."
+    },
+    {
+      "name": "ngrok.authtoken",
+      "type": "java.lang.String",
+      "description": "Auth token từ tài khoản ngrok."
+    },
+    {
+      "name": "ngrok.public-url",
+      "type": "java.lang.String",
+      "description": "URL public của ngrok tunnel (khi chạy ngrok thủ công)."
     }
   ]
 }

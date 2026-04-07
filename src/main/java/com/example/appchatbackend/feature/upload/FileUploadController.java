@@ -25,6 +25,9 @@ public class FileUploadController {
     @Value("${upload.dir}")
     private String uploadDir;
 
+    @Value("${ngrok.public-url:}")
+    private String ngrokPublicUrl;
+
     /**
      * Upload file (ảnh hoặc file đính kèm)
      * POST /upload
@@ -59,9 +62,10 @@ public class FileUploadController {
         Path targetPath = uploadPath.resolve(savedFilename);
         Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-        // Build URL trả về
-        String baseUrl = request.getScheme() + "://" + request.getServerName()
-                + ":" + request.getServerPort();
+        // Build URL trả về — dùng ngrok public URL nếu có
+        String baseUrl = (ngrokPublicUrl != null && !ngrokPublicUrl.isBlank())
+                ? ngrokPublicUrl
+                : request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
         String fileUrl = baseUrl + "/files/" + savedFilename;
 
         Message.MediaAttachment attachment = Message.MediaAttachment.builder()

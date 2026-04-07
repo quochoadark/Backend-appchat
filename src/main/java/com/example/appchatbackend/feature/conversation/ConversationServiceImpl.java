@@ -1,9 +1,12 @@
 package com.example.appchatbackend.feature.conversation;
 
+import com.example.appchatbackend.exception.ResourceNotFoundException;
 import com.example.appchatbackend.feature.message.Message;
 import com.example.appchatbackend.feature.message.MessageType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +29,6 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.findById(id);
     }
 
-    // Tạo hoặc trả về hội thoại DIRECT đã tồn tại giữa 2 người
     @Override
     public Conversation getOrCreateDirectConversation(String userId1, String userId2) {
         Optional<Conversation> existing = conversationRepository
@@ -85,7 +87,7 @@ public class ConversationServiceImpl implements ConversationService {
             if (message.getMessageType() == MessageType.IMAGE) {
                 preview = "[Ảnh]";
             } else if (message.getMessageType() == MessageType.FILE) {
-                preview = message.getContent(); // tên file
+                preview = message.getContent();
             } else {
                 preview = message.getContent();
             }
@@ -99,5 +101,72 @@ public class ConversationServiceImpl implements ConversationService {
                     .build());
             conversationRepository.save(conv);
         });
+    }
+
+    // Fix 2: Kick thành viên khỏi nhóm (chỉ admin)
+    @Override
+    public void kickMember(String conversationId, String requesterId, String targetUserId) {
+        Conversation conv = getGroupOrThrow(conversationId);
+        requireAdmin(conv, requesterId);
+        if (targetUserId.equals(conv.getCreatedBy())) {
+            throw new IllegalStateException("Không thể kick người tạo nhóm");
+        }
+        List<String> participants = new ArrayList<>(conv.getParticipants());
+        participants.remove(targetUserId);
+        conv.setParticipants(participants);
+        if (conv.getAdminIds() != null) {
+            List<String> admins = new ArrayList<>(conv.getAdminIds());
+            admins.remove(targetUserId);
+            conv.setAdminIds(admins);
+        }
+        conversationRepository.save(conv);
+    }
+
+    // Fix 2: Thăng thành viên lên admin (chỉ admin)
+    @Override
+    public void promoteAdmin(String conversationId, String requesterId, String targetUserId) {
+        Conversation conv = getGroupOrThrow(conversationId);
+        requireAdmin(conv, requesterId);
+        if (!conv.getParticipants().contains(targetUserId)) {
+            throw new ResourceNotFoundException("Thành viên", "id", targetUserId);
+        }
+        List<String> admins = conv.getAdminIds() != null
+                ? new ArrayList<>(conv.getAdminIds()) : new ArrayList<>();
+        if (!admins.contains(targetUserId)) {
+            admins.add(targetUserId);
+            conv.setAdminIds(admins);
+            conversationRepository.save(conv);
+        }
+    }
+
+    // Fix 2: Hạ admin xuống thành viên thường (chỉ admin)
+    @Override
+    public void demoteAdmin(String conversationId, String requesterId, String targetUserId) {
+        Conversation conv = getGroupOrThrow(conversationId);
+        requireAdmin(conv, requesterId);
+        if (targetUserId.equals(conv.getCreatedBy())) {
+            throw new IllegalStateException("Không thể hạ quyền người tạo nhóm");
+        }
+        if (conv.getAdminIds() != null) {
+            List<String> admins = new ArrayList<>(conv.getAdminIds());
+            admins.remove(targetUserId);
+            conv.setAdminIds(admins);
+            conversationRepository.save(conv);
+        }
+    }
+
+    private Conversation getGroupOrThrow(String conversationId) {
+        Conversation conv = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hội thoại", "id", conversationId));
+        if (conv.getType() != ConversationType.GROUP) {
+            throw new IllegalStateException("Thao tác chỉ áp dụng cho nhóm");
+        }
+        return conv;
+    }
+
+    private void requireAdmin(Conversation conv, String userId) {
+        if (conv.getAdminIds() == null || !conv.getAdminIds().contains(userId)) {
+            throw new AccessDeniedException("Chỉ admin mới có quyền thực hiện thao tác này");
+        }
     }
 }

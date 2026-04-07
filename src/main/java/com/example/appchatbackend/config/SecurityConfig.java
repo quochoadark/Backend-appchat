@@ -33,6 +33,7 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http, JwtBlacklistFilter jwtBlacklistFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> {})
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth

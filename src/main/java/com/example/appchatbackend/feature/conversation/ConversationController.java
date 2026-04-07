@@ -30,7 +30,6 @@ public class ConversationController {
         this.userRepository = userRepository;
     }
 
-    // Lấy danh sách hội thoại của user hiện tại
     @GetMapping
     public ResponseEntity<ApiResponse<List<Conversation>>> getMyConversations(@AuthenticationPrincipal Jwt jwt) {
         String currentUserId = getCurrentUserId(jwt);
@@ -38,7 +37,6 @@ public class ConversationController {
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách hội thoại thành công", conversations));
     }
 
-    // Lấy chi tiết một hội thoại
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Conversation>> getConversationById(
             @PathVariable String id,
@@ -53,20 +51,18 @@ public class ConversationController {
         return ResponseEntity.ok(ApiResponse.success("Lấy thông tin hội thoại thành công", conversation));
     }
 
-    // Tạo hoặc lấy hội thoại DIRECT với một người khác
     @PostMapping("/direct")
     public ResponseEntity<ApiResponse<Conversation>> getOrCreateDirectConversation(
             @Valid @RequestBody CreateDirectConversationRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         String currentUserId = getCurrentUserId(jwt);
-        // Kiểm tra người dùng đích tồn tại
         userRepository.findById(request.getTargetUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "id", request.getTargetUserId()));
-        Conversation conversation = conversationService.getOrCreateDirectConversation(currentUserId, request.getTargetUserId());
+        Conversation conversation = conversationService.getOrCreateDirectConversation(
+                currentUserId, request.getTargetUserId());
         return ResponseEntity.ok(ApiResponse.success("Lấy hoặc tạo hội thoại thành công", conversation));
     }
 
-    // Tạo hội thoại nhóm
     @PostMapping("/group")
     public ResponseEntity<ApiResponse<Conversation>> createGroupConversation(
             @Valid @RequestBody CreateGroupConversationRequest request,
@@ -85,7 +81,7 @@ public class ConversationController {
                 .avatarUrl(request.getAvatarUrl())
                 .participants(participants)
                 .createdBy(currentUserId)
-                .adminIds(List.of(currentUserId))
+                .adminIds(new ArrayList<>(List.of(currentUserId)))
                 .isActive(true)
                 .build();
 
@@ -98,7 +94,6 @@ public class ConversationController {
                 .body(ApiResponse.created("Tạo nhóm hội thoại thành công", created));
     }
 
-    // Cập nhật thông tin hội thoại nhóm
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Conversation>> updateConversation(
             @PathVariable String id,
@@ -119,7 +114,6 @@ public class ConversationController {
         return ResponseEntity.ok(ApiResponse.success("Cập nhật hội thoại thành công", updated));
     }
 
-    // Xóa hội thoại (soft delete)
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteConversation(
             @PathVariable String id,
@@ -135,7 +129,43 @@ public class ConversationController {
         return ResponseEntity.noContent().build();
     }
 
+    // Fix 2: Kick thành viên khỏi nhóm
+    @DeleteMapping("/{id}/members/{userId}")
+    public ResponseEntity<ApiResponse<Void>> kickMember(
+            @PathVariable String id,
+            @PathVariable String userId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String requesterId = getCurrentUserId(jwt);
+        conversationService.kickMember(id, requesterId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Kick thành viên thành công", null));
+    }
+
+    // Fix 2: Thăng thành viên lên admin
+    @PostMapping("/{id}/admins/{userId}")
+    public ResponseEntity<ApiResponse<Void>> promoteAdmin(
+            @PathVariable String id,
+            @PathVariable String userId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String requesterId = getCurrentUserId(jwt);
+        conversationService.promoteAdmin(id, requesterId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Thăng admin thành công", null));
+    }
+
+    // Fix 2: Hạ admin xuống thành viên thường
+    @DeleteMapping("/{id}/admins/{userId}")
+    public ResponseEntity<ApiResponse<Void>> demoteAdmin(
+            @PathVariable String id,
+            @PathVariable String userId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String requesterId = getCurrentUserId(jwt);
+        conversationService.demoteAdmin(id, requesterId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Hạ quyền admin thành công", null));
+    }
+
+    // Fix 5: Đọc userId từ JWT claim, không query DB
     private String getCurrentUserId(Jwt jwt) {
+        String userId = jwt.getClaimAsString("userId");
+        if (userId != null && !userId.isBlank()) return userId;
         String email = jwt.getSubject();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "email", email));

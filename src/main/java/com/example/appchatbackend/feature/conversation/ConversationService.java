@@ -22,4 +22,10 @@ public interface ConversationService {
     boolean isParticipant(String conversationId, String userId);
 
     void updateLastMessage(String conversationId, Message message);
+
+    void kickMember(String conversationId, String requesterId, String targetUserId);
+
+    void promoteAdmin(String conversationId, String requesterId, String targetUserId);
+
+    void demoteAdmin(String conversationId, String requesterId, String targetUserId);
 }

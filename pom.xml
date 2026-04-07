@@ -103,6 +103,7 @@
 			<artifactId>com.liferay.portal.kernel</artifactId>
 			<version>4.27.1</version>
 		</dependency>
+
 	</dependencies>
 
 	<build>

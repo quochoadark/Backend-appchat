@@ -1,6 +1,10 @@
 package com.example.appchatbackend.feature.message;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -12,19 +16,19 @@ import java.util.Optional;
 public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
+    private final MongoTemplate mongoTemplate;
 
-    public MessageServiceImpl(MessageRepository messageRepository) {
+    public MessageServiceImpl(MessageRepository messageRepository, MongoTemplate mongoTemplate) {
         this.messageRepository = messageRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
-    // Trang đầu tiên (50 tin nhắn mới nhất)
     @Override
     public List<Message> getMessages(String conversationId) {
         return messageRepository.findByConversationIdAndIsDeletedFalseOrderByCreatedAtDesc(
                 conversationId, PageRequest.of(0, 50));
     }
 
-    // Trang tiếp theo — cursor là created_at của tin nhắn cũ nhất đã nhận
     @Override
     public List<Message> getMessagesBefore(String conversationId, Instant cursor) {
         return messageRepository.findByConversationIdAndCreatedAtBeforeAndIsDeletedFalseOrderByCreatedAtDesc(
@@ -38,7 +42,6 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Message sendMessage(Message message) {
-        // Tự động thêm người gửi vào read_by
         if (message.getReadBy() == null) {
             message.setReadBy(new HashMap<>());
         }
@@ -60,19 +63,17 @@ public class MessageServiceImpl implements MessageService {
         return false;
     }
 
-    // Đánh dấu đã đọc — thêm userId vào read_by của từng tin nhắn
+    // Fix 4: Dùng MongoDB bulk updateMulti thay vì fetch 200 rồi save từng cái
     @Override
     public void markAsRead(String conversationId, String userId) {
-        List<Message> unread = messageRepository
-                .findByConversationIdAndIsDeletedFalseOrderByCreatedAtDesc(
-                        conversationId, PageRequest.of(0, 200));
-        Instant now = Instant.now();
-        for (Message msg : unread) {
-            if (!msg.getReadBy().containsKey(userId)) {
-                msg.getReadBy().put(userId, now);
-            }
-        }
-        messageRepository.saveAll(unread);
+        Query query = Query.query(
+                Criteria.where("conversation_id").is(conversationId)
+                        .and("is_deleted").is(false)
+                        .and("read_by." + userId).exists(false)
+                        .and("sender_id").ne(userId)
+        );
+        Update update = new Update().set("read_by." + userId, Instant.now());
+        mongoTemplate.updateMulti(query, update, Message.class);
     }
 
     @Override
