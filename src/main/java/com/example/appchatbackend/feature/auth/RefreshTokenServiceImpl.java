@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * RefreshTokenServiceImpl — implementation của RefreshTokenService.
+ * Quản lý vòng đời refresh token: tạo, xác thực, thu hồi.
+ */
 @Service
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 

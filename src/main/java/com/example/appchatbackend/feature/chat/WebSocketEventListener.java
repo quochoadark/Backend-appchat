@@ -15,6 +15,19 @@ import java.security.Principal;
 import java.time.Instant;
 import java.util.Optional;
 
+/**
+ * WebSocketEventListener — lang nghe cac su kien vong doi cua WebSocket session.
+ *
+ * Xu ly 2 su kien chinh:
+ * - SessionConnectedEvent: user da ket noi thanh cong → chi log debug
+ * - SessionDisconnectEvent: user ngat ket noi → dat offline trong Redis + MongoDB
+ *   + broadcast USER_OFFLINE toi /topic/presence de cac client khac cap nhat UI
+ *
+ * Luu y: WebSocketAuthInterceptor da xu ly setOnline() khi CONNECT.
+ * Listener nay chi xu ly DISCONNECT (bao gom ca truong hop mat mang dot ngot).
+ * Truong hop mat mang: Redis TTL 5 phut se tu xoa key, nhung MongoDB can duoc cap nhat
+ * ngay khi DisconnectEvent duoc fire (Spring WebSocket phat hien qua heartbeat).
+ */
 @Component
 public class WebSocketEventListener {
 

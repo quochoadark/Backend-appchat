@@ -20,6 +20,20 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * MessageController — REST API quan ly tin nhan (HTTP, khac voi ChatController qua WebSocket).
+ *
+ * Endpoints (yeu cau JWT, phai la thanh vien hoi thoai):
+ * - GET  /conversations/{id}/messages          → lay tin nhan (ho tro cursor pagination voi ?before=)
+ * - GET  /messages/{id}                        → lay 1 tin nhan cu the
+ * - POST /conversations/{id}/messages          → gui tin nhan moi (REST API, khac WebSocket)
+ * - DELETE /messages/{id}                      → xoa tin nhan (chi nguoi gui)
+ * - POST /conversations/{id}/messages/read     → danh dau da doc het tin nhan
+ * - GET  /conversations/{id}/messages/unread   → dem so tin chua doc
+ *
+ * Khi gui tin nhan qua REST (POST), controller cung publish len Redis
+ * de broadcast real-time toi cac client dang ket noi WebSocket.
+ */
 @RestController
 public class MessageController {
 

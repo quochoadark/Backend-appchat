@@ -5,6 +5,25 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * ApiResponse — wrapper chuan cho tat ca HTTP response trong ung dung.
+ *
+ * Muc dich: dam bao moi API deu tra ve cung 1 dinh dang JSON nhat quan:
+ *   { "statusCode": 200, "message": "...", "data": {...} }
+ *   { "statusCode": 404, "message": "...", "error": "Not Found" }
+ *   { "statusCode": 400, "message": "...", "error": "Bad Request", "details": [...] }
+ *
+ * Generic <T>: kieu du lieu cua field "data" — linh hoat voi moi loai response.
+ * @JsonInclude(NON_NULL): cac field null se khong xuat hien trong JSON output
+ * (vd: response thanh cong se khong co field "error" va "details").
+ *
+ * Su dung static factory methods thay vi constructor truc tiep:
+ *   ApiResponse.success(data)           → 200
+ *   ApiResponse.created(data)           → 201
+ *   ApiResponse.notFound(message)       → 404
+ *   ApiResponse.conflict(message)       → 409
+ *   ApiResponse.badRequest(msg, errors) → 400 voi danh sach loi validation
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 

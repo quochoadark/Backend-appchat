@@ -18,6 +18,21 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
+/**
+ * FileUploadController — xu ly upload file (anh hoac file dinh kem).
+ *
+ * Luong upload:
+ * 1. Client POST /upload voi multipart/form-data (field "file")
+ * 2. Server luu file voi ten UUID (tranh trung ten + tranh path traversal)
+ * 3. Tra ve MediaAttachment (url, fileName, fileSize, mimeType)
+ * 4. Client dung MediaAttachment nay khi gui tin nhan IMAGE/FILE qua WebSocket hoac REST
+ *
+ * URL tra ve:
+ * - Neu co Ngrok URL (dev): dung ngrok URL → co the truy cap tu internet
+ * - Khong co Ngrok: dung server URL hien tai → chi truy cap trong mang noi bo
+ *
+ * File duoc phuc vu qua GET /files/{filename} (dinh nghia trong WebMvcConfig).
+ */
 @RestController
 @RequestMapping("/upload")
 public class FileUploadController {

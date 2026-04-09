@@ -18,6 +18,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * User — document MongoDB lưu thông tin người dùng, collection "users".
+ *
+ * @Data: Lombok tự tạo getter/setter/equals/hashCode/toString
+ * @NoArgsConstructor: constructor không tham số (bắt buộc cho MongoDB deserialization)
+ * @AllArgsConstructor: constructor đủ tham số (dùng với @Builder)
+ * @Builder: cho phép tạo object theo kiểu User.builder()...build()
+ * @Document: đánh dấu đây là MongoDB document, Spring Data MongoDB tự map
+ *
+ * @JsonProperty(WRITE_ONLY) trên passwordHash: field chỉ nhận từ client (khi đăng ký),
+ * KHÔNG bao giờ trả ra ngoài trong JSON response → bảo mật mật khẩu.
+ */
 @Data // Tự tạo get set
 @NoArgsConstructor // tạo constructor không tham số và đủ tham số
 @AllArgsConstructor //

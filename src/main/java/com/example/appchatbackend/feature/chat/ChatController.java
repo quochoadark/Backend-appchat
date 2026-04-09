@@ -19,6 +19,27 @@ import org.springframework.stereotype.Controller;
 import java.security.Principal;
 import java.time.Instant;
 
+/**
+ * ChatController — xu ly cac su kien real-time qua WebSocket + STOMP.
+ *
+ * Khac voi MessageController (REST HTTP), ChatController dung @MessageMapping
+ * de nhan message tu client qua WebSocket, xu ly va broadcast lai.
+ *
+ * Luong xu ly tin nhan (chat.send):
+ *   Client → /app/chat.send → ChatController.sendMessage()
+ *   → luu vao MongoDB → publish len Redis → RedisMessageSubscriber nhan
+ *   → broadcast qua SimpMessagingTemplate → /topic/conversation/{id}
+ *   → tat ca client dang subscribe nhan duoc tin
+ *
+ * Tai sao phai qua Redis thay vi broadcast thang?
+ * → Ho tro nhieu instance (horizontal scaling): moi instance chi biet ket noi tren chinh no,
+ *   Redis lam kenh trung gian ket noi tat ca instance lai.
+ *
+ * Cac su kien WebSocket:
+ * - /app/chat.send    → gui tin nhan (luu DB + real-time)
+ * - /app/chat.typing  → dang go (chi real-time, khong luu DB)
+ * - /app/chat.read    → da doc (luu DB + broadcast read receipt)
+ */
 @Controller
 public class ChatController {
 

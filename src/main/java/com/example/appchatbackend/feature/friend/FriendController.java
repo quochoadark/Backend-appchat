@@ -13,6 +13,19 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * FriendController — REST API quan ly ket ban va loi moi ket ban.
+ *
+ * Endpoints (yeu cau JWT):
+ * - GET    /friends                          → danh sach ban be
+ * - GET    /friends/requests/received        → loi moi nhan duoc (PENDING)
+ * - GET    /friends/requests/sent            → loi moi da gui (PENDING)
+ * - POST   /friends/requests                 → gui loi moi ket ban
+ * - POST   /friends/requests/{id}/accept     → chap nhan loi moi
+ * - POST   /friends/requests/{id}/decline    → tu choi loi moi
+ * - DELETE /friends/requests/{id}            → huy loi moi da gui
+ * - DELETE /friends/{friendId}               → huy ket ban
+ */
 @RestController
 @RequestMapping("/friends")
 public class FriendController {

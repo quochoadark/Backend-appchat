@@ -6,6 +6,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * RefreshTokenRepository — truy cập MongoDB collection "refresh_tokens".
+ * Spring Data tự sinh implementation tại runtime từ tên method.
+ */
 @Repository
 public interface RefreshTokenRepository extends MongoRepository<RefreshToken, String> {
 

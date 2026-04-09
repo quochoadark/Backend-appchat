@@ -23,6 +23,16 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * AuthController — xử lý các endpoint xác thực người dùng.
+ *
+ * Endpoints:
+ * - POST /auth/register  → đăng ký tài khoản mới
+ * - POST /auth/login     → đăng nhập, trả về access token + refresh token
+ * - POST /auth/refresh   → lấy access token mới bằng refresh token (không cần đăng nhập lại)
+ * - POST /auth/logout    → đăng xuất (blacklist access token + revoke refresh token)
+ * - GET  /auth/me        → lấy thông tin user đang đăng nhập từ JWT
+ */
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -52,6 +62,10 @@ public class AuthController {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Đăng nhập: xác thực email/password → tạo JWT access token + refresh token.
+     * deviceInfo (User-Agent) và ipAddress được lưu cùng refresh token để quản lý phiên.
+     */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginRequest request,
@@ -73,6 +87,11 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công", loginResponse));
     }
 
+    /**
+     * Làm mới token: nhận refresh token cũ → trả về access token mới + refresh token mới.
+     * Kỹ thuật "Refresh Token Rotation": refresh token cũ bị revoke ngay sau khi dùng,
+     * ngăn tái sử dụng nếu bị đánh cắp.
+     */
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<LoginResponse>> refresh(
             @Valid @RequestBody RefreshRequest request,
@@ -100,6 +119,10 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Làm mới token thành công", response));
     }
 
+    /**
+     * Đăng xuất: blacklist access token hiện tại vào Redis + revoke refresh token.
+     * Sau đó mọi request dùng access token này đều bị JwtBlacklistFilter chặn.
+     */
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             Authentication authentication,

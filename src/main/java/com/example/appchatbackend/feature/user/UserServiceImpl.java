@@ -9,6 +9,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * UserServiceImpl — implementation của UserService.
+ *
+ * Lưu ý quan trọng ở hàm create():
+ * - Kiểm tra trùng email/username trước khi lưu → ném DuplicateResourceException (409)
+ * - Hash mật khẩu bằng BCrypt trước khi lưu → không lưu plaintext vào DB
+ */
 @Service
 public class UserServiceImpl implements UserService {
 

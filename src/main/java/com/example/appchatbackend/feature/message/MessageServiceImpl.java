@@ -12,11 +12,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * MessageServiceImpl — implementation cua MessageService.
+ *
+ * Dung MongoTemplate (thay vi chỉ Repository) de thuc hien bulk update hieu qua:
+ * markAsRead() dung updateMulti() — cap nhat nhieu document 1 lan thay vi loop tung cai.
+ */
 @Service
 public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
-    private final MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate; // Dung cho cac query/update phuc tap hon Repository
 
     public MessageServiceImpl(MessageRepository messageRepository, MongoTemplate mongoTemplate) {
         this.messageRepository = messageRepository;

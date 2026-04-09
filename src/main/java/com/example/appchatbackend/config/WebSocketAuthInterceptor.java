@@ -18,6 +18,13 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * WebSocketAuthInterceptor — interceptor xác thực JWT khi client kết nối WebSocket.
+ *
+ * Implements ChannelInterceptor: được gọi trước mỗi message đi vào inbound channel.
+ * Nhiệm vụ chính: chặn lệnh CONNECT của STOMP, kiểm tra JWT trong header,
+ * nếu hợp lệ thì gắn thông tin user vào session WebSocket.
+ */
 @Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
@@ -31,6 +38,20 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         this.onlineStatusService = onlineStatusService;
     }
 
+    /**
+     * Chặn message trước khi gửi vào channel — đây là nơi xác thực diễn ra.
+     *
+     * Luồng xử lý khi client gửi lệnh STOMP CONNECT:
+     * 1. Lấy header "Authorization" từ STOMP frame.
+     * 2. Giải mã JWT → lấy email (subject).
+     * 3. Tìm user trong DB theo email.
+     * 4. Tạo Authentication object với userId làm principal
+     *    → gắn vào WebSocket session để sau này dùng /user/{userId}/queue/...
+     * 5. Đánh dấu user online trong Redis và MongoDB.
+     *
+     * Nếu token thiếu hoặc không hợp lệ → ném MessageDeliveryException → từ chối kết nối.
+     * Các lệnh STOMP khác (SEND, SUBSCRIBE...) không bị chặn ở đây.
+     */
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);

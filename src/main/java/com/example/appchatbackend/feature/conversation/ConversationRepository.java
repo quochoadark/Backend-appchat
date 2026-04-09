@@ -7,6 +7,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * ConversationRepository — truy cập MongoDB collection "conversations".
+ * Bao gồm các query phức tạp dùng @Query annotation với MongoDB query syntax.
+ */
 @Repository
 public interface ConversationRepository extends MongoRepository<Conversation, String> {
 

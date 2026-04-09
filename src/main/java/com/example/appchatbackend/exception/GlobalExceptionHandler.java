@@ -21,6 +21,17 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * GlobalExceptionHandler — bắt và xử lý tập trung tất cả exception trong ứng dụng.
+ *
+ * @RestControllerAdvice: áp dụng cho toàn bộ @RestController,
+ * tự động bắt exception ném ra từ bất kỳ controller nào và trả về ApiResponse chuẩn.
+ *
+ * Thay vì mỗi controller phải tự try-catch, tất cả lỗi được xử lý một chỗ duy nhất:
+ * - Business exception (404, 409, 401...) → log warn + response tương ứng
+ * - Lỗi validation (@Valid) → tổng hợp danh sách field lỗi → 400
+ * - Lỗi hệ thống không xác định → log error + 500
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

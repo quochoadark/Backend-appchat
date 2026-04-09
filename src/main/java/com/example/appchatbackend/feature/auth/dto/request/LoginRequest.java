@@ -3,6 +3,13 @@ package com.example.appchatbackend.feature.auth.dto.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * LoginRequest — DTO nhận dữ liệu từ client khi đăng nhập.
+ * POST /auth/login
+ *
+ * Validation được Spring tự động kiểm tra nhờ @Valid ở controller.
+ * Nếu sai → GlobalExceptionHandler bắt MethodArgumentNotValidException → 400.
+ */
 public class LoginRequest {
 
     @NotBlank(message = "Email không được để trống")

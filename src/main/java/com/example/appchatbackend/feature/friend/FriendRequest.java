@@ -14,6 +14,16 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
 
+/**
+ * FriendRequest — document MongoDB luu loi moi ket ban, collection "friend_requests".
+ *
+ * Vong doi: PENDING → ACCEPTED (them vao friend_ids cua ca 2) hoac DECLINED / bi huy.
+ *
+ * CompoundIndex unique (sender_id + receiver_id):
+ * - Dam bao moi cap (A, B) chi co 1 loi moi tai 1 thoi diem
+ * - Ngan gui loi moi trung (ca 2 chieu)
+ * - FriendServiceImpl kiem tra ca chieu nguoc lai truoc khi cho phep gui
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

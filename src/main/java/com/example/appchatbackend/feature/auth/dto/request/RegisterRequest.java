@@ -4,6 +4,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * RegisterRequest — DTO nhận dữ liệu từ client khi đăng ký tài khoản mới.
+ * POST /auth/register
+ */
 public class RegisterRequest {
 
     @NotBlank(message = "Tên đăng nhập không được để trống")

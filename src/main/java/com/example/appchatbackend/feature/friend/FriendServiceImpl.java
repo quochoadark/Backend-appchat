@@ -13,6 +13,19 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * FriendServiceImpl — implementation cua FriendService.
+ *
+ * Dung MongoTemplate thay vi Repository cho addFriend/removeFriend
+ * vi dung MongoDB operator $addToSet va $pull:
+ * - $addToSet: them friendId vao mang ma khong tao duplicate (atomic)
+ * - $pull: xoa friendId khoi mang (atomic)
+ *
+ * Logic rollback trong acceptRequest():
+ * Neu buoc "them B vao friend_ids cua A" thanh cong nhung
+ * "them A vao friend_ids cua B" that bai → tu dong xoa lai buoc 1
+ * → tranh trang thai khong dong nhat (A co B lam ban nhung B khong co A).
+ */
 @Service
 public class FriendServiceImpl implements FriendService {
 

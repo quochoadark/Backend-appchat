@@ -21,6 +21,11 @@ public class RedisMessagePublisher {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Publish notification len Redis channel cua conversation.
+     * Serialize thanh JSON truoc khi publish vi Redis chi truyen String.
+     * Tat ca instance server co RedisMessageSubscriber dang lang nghe se nhan duoc.
+     */
     public void publish(String conversationId, ChatNotification notification) {
         try {
             String json = objectMapper.writeValueAsString(notification);

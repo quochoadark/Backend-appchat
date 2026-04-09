@@ -14,16 +14,33 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.Instant;
 import java.util.Map;
 
+/**
+ * Message — document MongoDB luu tin nhan, collection "messages".
+ *
+ * Ho tro nhieu loai tin nhan (MessageType): TEXT, IMAGE, FILE, SYSTEM.
+ * - content: noi dung van ban (null neu la IMAGE/FILE)
+ * - media (embedded MediaAttachment): thong tin file dinh kem (null neu la TEXT)
+ * - replyToMessageId: ID tin nhan duoc reply (null neu khong phai reply)
+ * - readBy (Map<userId, thoiDiemDoc>): theo doi ai da doc tin — dung de dem tin chua doc
+ *   va hien thi "da xem" (read receipt)
+ * - isDeleted: soft delete — van giu document trong DB nhung khong hien cho client
+ * - senderDisplayName: luu ten hien thi tai thoi diem gui
+ *   → tranh query DB moi lan hien thi, ten van chinh xac du user doi sau
+ *
+ * CompoundIndexes toi uu 2 truy van chinh:
+ * - idx_msg_conv_created: phan trang tin nhan cua 1 hoi thoai (DESC theo thoi gian)
+ * - idx_msg_conv_sender: tim tin nhan cua 1 user trong 1 hoi thoai
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Document(collection = "messages")
 @CompoundIndexes({
-    // Phân trang tin nhắn trong 1 hội thoại
+    // Phan trang tin nhan trong 1 hoi thoai
     @CompoundIndex(name = "idx_msg_conv_created",
                    def = "{'conversation_id': 1, 'created_at': -1}"),
-    // Tìm tin nhắn của 1 user trong 1 hội thoại
+    // Tim tin nhan cua 1 user trong 1 hoi thoai
     @CompoundIndex(name = "idx_msg_conv_sender",
                    def = "{'conversation_id': 1, 'sender_id': 1}")
 })

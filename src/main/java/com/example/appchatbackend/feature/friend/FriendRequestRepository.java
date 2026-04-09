@@ -6,6 +6,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * FriendRequestRepository — truy cap MongoDB collection "friend_requests".
+ * Spring Data tu sinh implementation tu ten method.
+ */
 @Repository
 public interface FriendRequestRepository extends MongoRepository<FriendRequest, String> {
 

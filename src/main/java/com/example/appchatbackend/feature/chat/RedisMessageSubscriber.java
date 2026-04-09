@@ -11,6 +11,21 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * RedisMessageSubscriber — SUBSCRIBE va xu ly message tu Redis Pub/Sub.
+ *
+ * Day la "nua nhan" cua Pub/Sub. Duoc dang ky trong RedisConfig
+ * de lang nghe tat ca channel khop pattern "chat:conversation:*".
+ *
+ * Khi co message tu Redis:
+ * 1. Deserialize JSON → ChatNotification
+ * 2. Dung SimpMessagingTemplate broadcast toi STOMP topic
+ *    "/topic/conversation/{conversationId}"
+ * 3. Tat ca WebSocket client dang subscribe topic do nhan duoc thong bao
+ *
+ * Implements MessageListener: interface cua Spring Data Redis cho Pub/Sub listener.
+ * Duoc goi tu background thread cua RedisMessageListenerContainer.
+ */
 @Service
 public class RedisMessageSubscriber implements MessageListener {
 
@@ -24,6 +39,11 @@ public class RedisMessageSubscriber implements MessageListener {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Duoc goi tu dong moi khi co message den tren bat ky channel khop "chat:conversation:*".
+     * @param message  message tu Redis (body la JSON bytes)
+     * @param pattern  pattern da match (vd: "chat:conversation:*")
+     */
     @Override
     public void onMessage(Message message, byte[] pattern) {
         try {

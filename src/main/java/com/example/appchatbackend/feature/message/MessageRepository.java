@@ -8,6 +8,12 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * MessageRepository — truy cap MongoDB collection "messages".
+ *
+ * Dung cursor-based pagination (theo created_at) thay vi offset pagination
+ * de tranh van de performance khi collection lon (offset phai skip N document).
+ */
 @Repository
 public interface MessageRepository extends MongoRepository<Message, String> {
 

@@ -10,6 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * ConversationServiceImpl — implementation cua ConversationService.
+ *
+ * Logic quan trong:
+ * - getOrCreateDirectConversation: kiem tra ton tai truoc khi tao → tranh tao trung
+ * - deleteConversation: soft delete (isActive=false), khong xoa khoi DB
+ * - kickMember / promoteAdmin / demoteAdmin: chi admin moi co quyen,
+ *   nguoi tao nhom (createdBy) duoc bao ve khoi bi kick hoac bi ha quyen
+ * - requireAdmin(): ham kiem tra quyen dung chung cho 3 thao tac quan ly nhom
+ */
 @Service
 public class ConversationServiceImpl implements ConversationService {
 

@@ -13,6 +13,17 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+/**
+ * UserController — REST API quản lý người dùng.
+ *
+ * Endpoints (đều yêu cầu JWT, trừ /users/search):
+ * - GET    /users           → lấy tất cả user
+ * - GET    /users/search    → tìm kiếm user theo keyword (phân trang)
+ * - GET    /users/{id}      → lấy thông tin 1 user
+ * - POST   /users           → tạo user mới (admin use case)
+ * - PUT    /users/{id}      → cập nhật thông tin user
+ * - DELETE /users/{id}      → xóa user
+ */
 @RestController
 @RequestMapping("/users")
 public class UserController {

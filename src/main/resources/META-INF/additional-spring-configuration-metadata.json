@@ -24,6 +24,16 @@
       "name": "ngrok.public-url",
       "type": "java.lang.String",
       "description": "URL public của ngrok tunnel (khi chạy ngrok thủ công)."
+    },
+    {
+      "name": "upload.dir",
+      "type": "java.lang.String",
+      "description": "Thư mục lưu file upload trên server (tương đối so với thư mục chạy app)."
+    },
+    {
+      "name": "upload.max-file-size",
+      "type": "java.lang.String",
+      "description": "Kích thước tối đa của file upload (ví dụ: 10MB). Được kiểm tra thủ công trong code."
     }
   ]
 }

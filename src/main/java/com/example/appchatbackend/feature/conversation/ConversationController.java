@@ -18,6 +18,22 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ConversationController — REST API quan ly hoi thoai.
+ *
+ * Endpoints (yeu cau JWT):
+ * - GET    /conversations              → danh sach hoi thoai cua user hien tai
+ * - GET    /conversations/{id}         → thong tin 1 hoi thoai (phai la thanh vien)
+ * - POST   /conversations/direct       → lay hoac tao hoi thoai 1-1
+ * - POST   /conversations/group        → tao hoi thoai nhom moi
+ * - PUT    /conversations/{id}         → cap nhat thong tin nhom
+ * - DELETE /conversations/{id}         → xoa hoi thoai (soft delete)
+ * - DELETE /conversations/{id}/members/{userId}   → kick thanh vien (chi admin)
+ * - POST   /conversations/{id}/admins/{userId}    → thang admin (chi admin)
+ * - DELETE /conversations/{id}/admins/{userId}    → ha quyen admin (chi admin)
+ *
+ * getCurrentUserId(): doc userId tu JWT claim de tranh query DB moi request.
+ */
 @RestController
 @RequestMapping("/conversations")
 public class ConversationController {
