@@ -1,6 +1,6 @@
 package com.example.appchatbackend.config;
 
-import com.example.appchatbackend.feature.chat.RedisMessageSubscriber;
+import com.example.appchatbackend.config.websocket.RedisMessageSubscriber;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

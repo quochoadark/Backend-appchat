@@ -1,8 +1,8 @@
 package com.example.appchatbackend.config;
 
-import com.example.appchatbackend.feature.chat.OnlineStatusService;
-import com.example.appchatbackend.feature.user.User;
-import com.example.appchatbackend.feature.user.UserRepository;
+import com.example.appchatbackend.services.OnlineStatusService;
+import com.example.appchatbackend.models.User;
+import com.example.appchatbackend.repositories.UserRepository;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;

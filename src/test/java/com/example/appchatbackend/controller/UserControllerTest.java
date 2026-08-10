@@ -1,7 +1,8 @@
 package com.example.appchatbackend.controller;
+import com.example.appchatbackend.controllers.UserController;
 
-import com.example.appchatbackend.feature.user.User;
-import com.example.appchatbackend.feature.user.UserRepository;
+import com.example.appchatbackend.models.User;
+import com.example.appchatbackend.repositories.UserRepository;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

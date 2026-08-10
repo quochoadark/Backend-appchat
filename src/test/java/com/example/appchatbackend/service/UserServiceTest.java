@@ -1,9 +1,9 @@
 package com.example.appchatbackend.service;
 
 import com.example.appchatbackend.exception.DuplicateResourceException;
-import com.example.appchatbackend.feature.user.User;
-import com.example.appchatbackend.feature.user.UserRepository;
-import com.example.appchatbackend.feature.user.UserServiceImpl;
+import com.example.appchatbackend.models.User;
+import com.example.appchatbackend.repositories.UserRepository;
+import com.example.appchatbackend.services.UserServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
